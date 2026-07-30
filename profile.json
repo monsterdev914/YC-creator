@@ -1,0 +1,93 @@
+{
+  "first_name": "Han Sheng",
+  "last_name": "Liang",
+  "linkedin_url": "https://www.linkedin.com/in/han-sheng-liang-257814391/",
+  "education": [
+    "National University of Singapore, Bachelor's Degree, Sep 2016 - Aug 2019"
+  ],
+  "employment": {
+    "WorkforceMentor": {
+      "company": "WorkforceMentor (PromentraAI)",
+      "location": "Remote",
+      "title": "Senior Software Engineer",
+      "start_date": "Sep 2025",
+      "end_date": "Present"
+    },
+    "Fathom": {
+      "company": "Fathom",
+      "location": "Remote",
+      "title": "Senior Software Engineer",
+      "start_date": "Feb 2025",
+      "end_date": "Aug 2025"
+    },
+    "MMIVIP": {
+      "company": "MMIVIP",
+      "location": "Remote",
+      "title": "Senior Back-End Engineer",
+      "start_date": "Sep 2023",
+      "end_date": "Oct 2024"
+    },
+    "Loom": {
+      "company": "Loom",
+      "location": "Remote",
+      "title": "Staff Software Engineer",
+      "start_date": "Feb 2022",
+      "end_date": "Aug 2023"
+    },
+    "Skymind": {
+      "company": "Skymind",
+      "location": "Hybrid",
+      "title": "AI Engineer",
+      "start_date": "Sep 2021",
+      "end_date": "Dec 2021"
+    }
+  },
+  "introduction": "I'm a software architect based in Malaysia with 8+ years building distributed systems and AI products. Most recently I've been working on AI mentoring platforms, meeting intelligence, and voice-agent SaaS — the kind of work where architecture choices actually show up in latency, reliability, and whether the product feels magical or fragile. I care a lot about shipping things people use: clear system design, practical AI (agents, RAG, real-time pipelines), and teams that move fast without painting themselves into a corner. I'm looking for a co-founder who brings the product and business side so we can build something ambitious together.",
+  "location": "Pahang Highlands, Malaysia",
+  "achievements": {
+    "1": "At Fathom, I led a bot-free meeting recording rewrite (Google Meet, Zoom, Teams, and more) that replaced a six-year legacy architecture — and got a production-ready POC out in three months.",
+    "2": "At MMIVIP, I built AI voice-agent platforms handling 10,000+ daily API requests under 300ms, improved API throughput by ~48%, cut infra cost ~25% by consolidating microservices, and kept 99.9% availability for 50,000+ monthly users.",
+    "3": "At Loom, I helped ship AI features like Auto Titles, Auto Summaries, and Auto Chapters, and built cloud-native video pipelines so those features could run at real product scale."
+  },
+  "is_technical": true,
+  "gender": "Male",
+  "birthday": "1997-09-14",
+  "calendly_url": "https://calendly.com/lianghansheng668/30min",
+  "working_on_startup": false,
+  "seeking_a_cofounder": true,
+  "avatar": "profile.png",
+  "video_link": "",
+  "twitter_url": "",
+  "instagram_url": "",
+  "how_heard": "",
+
+  "more_about_you": {
+    "has_startup_idea": "none",
+    "ideas": "",
+    "already_has_cofounder": false,
+    "full_time_timing": "passive",
+    "responsibilities": ["Engineering"],
+    "interests": "all",
+    "equity_expectations": "I'm open to an equal equity split with a co-founder, in line with YC's recommendation.",
+    "free_time": "",
+    "life_story": "",
+    "anything_else": ""
+  },
+
+  "cofounder_preferences": {
+    "looking_for": "Looking for a non-technical co-founder to own Product, Design, Sales and marketing, and Operations — shaping the product vision, crafting the experience, driving go-to-market, and running day-to-day business execution.",
+    "idea_preference": "has_idea",
+    "idea_preference_importance": "Required",
+    "technical_preference": "non_technical",
+    "technical_preference_importance": "Required",
+    "timing_preference": "no_preference",
+    "location_preference": "no_preference",
+    "location_preference_importance": "Required",
+    "age_preference": "no_preference",
+    "age_preference_importance": "Required",
+    "desired_responsibilities": ["Product", "Design", "Sales and marketing", "Operations"],
+    "desired_responsibilities_importance": "Required",
+    "shared_interests_preference": "no_preference",
+    "alert_on_match": true
+  }
+}

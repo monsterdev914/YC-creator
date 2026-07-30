@@ -1,0 +1,12 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+venv/
+output/
+credentials.csv
+cookies_export.csv
+emails.csv
+proxy.txt
+*.log
+.playwright/
