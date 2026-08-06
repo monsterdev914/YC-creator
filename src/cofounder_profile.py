@@ -224,9 +224,16 @@ def save_and_continue(page: Page, *, final_step: bool = False) -> None:
 
     # Early steps use "Save & continue"; later/complete profiles use
     # "Save for later" / "Submit for review" on every tab.
-    patterns = [r"Save\s*&\s*continue", r"Save for later"]
+    # On the final step prefer Submit — both buttons are often present, and
+    # matching "Save for later" first would skip the actual submission.
     if final_step:
-        patterns.append(r"Submit for review")
+        patterns = [
+            r"Submit for review",
+            r"Save\s*&\s*continue",
+            r"Save for later",
+        ]
+    else:
+        patterns = [r"Save\s*&\s*continue", r"Save for later"]
 
     target, matched = _find_save_button(page, patterns)
     if target is None:
@@ -244,23 +251,78 @@ def save_and_continue(page: Page, *, final_step: bool = False) -> None:
         return
 
     print(f"  Clicking: {matched}")
-    target.click()
-    page.wait_for_timeout(3000)
-    body = page.locator("body").inner_text()
-    lowered = body.lower()
-    if "please fix" in lowered or "fix errors" in lowered:
-        lines = [
-            line.strip()
-            for line in body.splitlines()
-            if line.strip()
-            and any(
-                k in line.lower()
-                for k in ("please", "error", "required", "fix", "invalid")
+    _click_save_button(page, target, matched, final_step=final_step)
+
+
+def _click_save_button(
+    page: Page, target, matched: str, *, final_step: bool
+) -> None:
+    """Click save/submit and verify it took effect; retry if needed."""
+    submit_re = re.compile(r"Submit for review", re.I)
+
+    for attempt in range(3):
+        try:
+            target.click(timeout=10000)
+        except Exception:
+            target.click(force=True, timeout=10000)
+
+        page.wait_for_timeout(2500)
+        body = page.locator("body").inner_text()
+        lowered = body.lower()
+        if "please fix" in lowered or "form errors" in lowered:
+            lines = [
+                line.strip()
+                for line in body.splitlines()
+                if line.strip()
+                and any(
+                    k in line.lower()
+                    for k in ("please", "error", "required", "form", "invalid")
+                )
+            ]
+            raise RuntimeError(
+                "Save rejected with validation errors: " + " | ".join(lines[:6])
             )
-        ]
-        raise RuntimeError(
-            "Save rejected with validation errors: " + " | ".join(lines[:6])
-        )
+
+        if not final_step:
+            return
+
+        # Final submit: succeed when the button is gone, disabled, or the page
+        # shows a post-submit state (under review / submitted / etc.).
+        still = page.get_by_role("button", name=submit_re)
+        if (
+            still.count() == 0
+            or not still.first.is_visible()
+            or not still.first.is_enabled()
+        ):
+            print("  Submit for review succeeded")
+            return
+        if any(
+            phrase in lowered
+            for phrase in (
+                "under review",
+                "submitted for review",
+                "awaiting review",
+                "profile is being reviewed",
+            )
+        ):
+            print("  Submit for review succeeded")
+            return
+
+        if attempt < 2:
+            print(f"  Submit did not stick (attempt {attempt + 1}), retrying...")
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(500)
+            target, _ = _find_save_button(page, [r"Submit for review"])
+            if target is None:
+                print("  Submit button gone after retry lookup — treating as success")
+                return
+            target.scroll_into_view_if_needed()
+
+    raise RuntimeError(
+        "Submit for review clicked but page still shows the button; "
+        f"url={page.url}"
+    )
+
 
 
 def upload_avatar(page: Page, avatar_path: Path) -> None:

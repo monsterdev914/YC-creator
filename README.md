@@ -17,12 +17,11 @@ copy .env.example .env
 Edit `.env`:
 
 ```env
-FIRST_NAME=John
-LAST_NAME=Doe
-LINKEDIN_URL=https://www.linkedin.com/in/your-profile/
 PASSWORD=YourSecurePassword123!
 HEADLESS=false
 ```
+
+Edit `profile.json` for shared first/last name and LinkedIn URL.
 
 Edit `emails.csv` (one email per line):
 
@@ -33,7 +32,7 @@ two@example.com
 
 Or with a header column named `email`.
 
-Shared first/last name, LinkedIn URL, and password come from `.env`.  
+Shared first/last name and LinkedIn URL come from `profile.json`; password from `.env`.  
 Username is generated randomly for each account.
 
 After each run, credentials are appended to `credentials.csv`:

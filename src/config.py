@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import json
 import os
 import secrets
 import string
@@ -11,6 +12,7 @@ from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_EMAILS_PATH = ROOT / "emails.csv"
+DEFAULT_PROFILE_PATH = ROOT / "profile.json"
 load_dotenv(ROOT / ".env")
 
 SIGNUP_URL = (
@@ -36,26 +38,35 @@ def _env_bool(name: str, default: bool = False) -> bool:
     return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
-def load_shared_profile() -> dict[str, str]:
-    first_name = os.getenv("FIRST_NAME", "").strip()
-    last_name = os.getenv("LAST_NAME", "").strip()
-    linkedin_url = os.getenv("LINKEDIN_URL", "").strip()
+def load_shared_profile(profile_path: Path | None = None) -> dict[str, str]:
+    """Name/LinkedIn from profile.json; password from .env."""
+    path = profile_path or DEFAULT_PROFILE_PATH
+    if not path.exists():
+        raise FileNotFoundError(f"Profile file not found: {path}")
+
+    data = json.loads(path.read_text(encoding="utf-8"))
+    first_name = str(data.get("first_name") or "").strip()
+    last_name = str(data.get("last_name") or "").strip()
+    linkedin_url = str(data.get("linkedin_url") or "").strip()
     password = os.getenv("PASSWORD", "").strip()
 
-    missing = [
+    missing_profile = [
         key
         for key, value in {
-            "FIRST_NAME": first_name,
-            "LAST_NAME": last_name,
-            "LINKEDIN_URL": linkedin_url,
-            "PASSWORD": password,
+            "first_name": first_name,
+            "last_name": last_name,
+            "linkedin_url": linkedin_url,
         }.items()
         if not value
     ]
-    if missing:
+    if missing_profile:
         raise ValueError(
-            f"Missing required environment variables: {', '.join(missing)}. "
-            "Copy .env.example to .env and fill them in."
+            f"Missing required fields in {path.name}: {', '.join(missing_profile)}"
+        )
+    if not password:
+        raise ValueError(
+            "Missing required environment variable: PASSWORD. "
+            "Copy .env.example to .env and fill it in."
         )
 
     return {
