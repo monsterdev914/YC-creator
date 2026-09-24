@@ -69,6 +69,16 @@ def _write_rows(path: Path, rows: list[dict[str, str]]) -> None:
             writer.writerow({key: row.get(key, "") for key in fieldnames})
 
 
+def find_credential(email: str, path: Path | None = None) -> dict[str, str] | None:
+    """Return the stored credential row for an email, if any."""
+    path = path or DEFAULT_CREDENTIALS_PATH
+    needle = email.strip()
+    for row in _dedupe_by_email(_read_raw_rows(path)):
+        if (row.get("email") or "").strip() == needle:
+            return row
+    return None
+
+
 def load_credentials(path: Path | None = None) -> list[Credential]:
     path = path or DEFAULT_CREDENTIALS_PATH
     if not path.exists():

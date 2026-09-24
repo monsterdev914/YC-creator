@@ -13,7 +13,7 @@ assert password, "Set PASSWORD in .env"
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=True)
     page = browser.new_page()
-    open_signup_form(page)
+    open_signup_form(page, target.email)
 
     fill_by_label(page, "First Name", target.first_name)
     fill_by_label(page, "Last Name", target.last_name)

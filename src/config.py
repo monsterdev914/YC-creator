@@ -217,8 +217,14 @@ def load_email_targets(config_path: Path | None = None) -> list[AccountTarget]:
 
         # Skip emails already successfully submitted unless status is failed/empty
         status = (row.get("status") or "").strip().lower()
-        if status in {"submitted", "profile_complete", "cofounder_started",
-                      "cofounder_agreed", "cofounder_profile_complete"}:
+        if status in {
+            "submitted",
+            "already_registered",
+            "profile_complete",
+            "cofounder_started",
+            "cofounder_agreed",
+            "cofounder_profile_complete",
+        }:
             continue
 
         targets.append(

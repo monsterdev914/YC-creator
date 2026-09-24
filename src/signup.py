@@ -21,10 +21,18 @@ from .config import (
     random_username,
     update_email_statuses,
 )
-from .credentials_io import DEFAULT_CREDENTIALS_PATH, upsert_credentials
+from .credentials_io import (
+    DEFAULT_CREDENTIALS_PATH,
+    find_credential,
+    upsert_credentials,
+)
 from .proxy import context_options, get_proxy_pool
 
 CREDENTIALS_PATH = DEFAULT_CREDENTIALS_PATH
+
+
+class EmailAlreadyRegisteredError(Exception):
+    """Continue led to login instead of the signup form."""
 
 
 @dataclass
@@ -65,19 +73,35 @@ def fill_by_label(page: Page, label: str, value: str) -> None:
     field.fill(value)
 
 
-def open_signup_form(page: Page) -> None:
+def open_signup_form(page: Page, email: str) -> None:
     page.goto(SIGNUP_URL, wait_until="domcontentloaded")
     page.wait_for_timeout(500)
 
-    # Landing page is login; switch to create-account form.
-    create_btn = page.get_by_role(
-        "button", name=re.compile(r"Create an account", re.I)
-    )
-    create_btn.wait_for(state="visible", timeout=20000)
-    create_btn.click()
+    # YC now uses email-first: enter email → Continue → signup form for new users.
+    email_field = page.locator("#ycid-input").first
+    email_field.wait_for(state="visible", timeout=20000)
+    email_field.fill(email)
+    page.get_by_role("button", name=re.compile(r"Continue", re.I)).click()
 
-    page.get_by_role("button", name="Sign Up").wait_for(state="visible", timeout=20000)
-    field_for_label(page, "First Name").wait_for(state="visible", timeout=20000)
+    first_name = field_for_label(page, "First Name")
+    signup_btn = page.get_by_role("button", name=re.compile(r"Sign\s*[Uu]p", re.I))
+    password_field = page.locator("#password-input")
+
+    try:
+        first_name.wait_for(state="visible", timeout=15000)
+        signup_btn.wait_for(state="visible", timeout=5000)
+        return
+    except PlaywrightTimeoutError:
+        pass
+
+    if password_field.is_visible() and first_name.count() == 0:
+        raise EmailAlreadyRegisteredError(
+            f"{email} already has an account; run profile flow instead of signup"
+        )
+
+    raise PlaywrightTimeoutError(
+        "Expected signup form after Continue; got an unknown page state"
+    )
 
 
 def _result(
@@ -109,8 +133,33 @@ def signup_one(page: Page, target: AccountTarget) -> SignupResult:
     finished_at = datetime.now(timezone.utc).isoformat()
 
     try:
-        open_signup_form(page)
+        open_signup_form(page, target.email)
+    except EmailAlreadyRegisteredError as exc:
+        existing = find_credential(target.email)
+        if existing:
+            if existing.get("username"):
+                username = existing["username"]
+            prior_status = (existing.get("status") or "").strip().lower()
+            if prior_status in {
+                "submitted",
+                "profile_complete",
+                "cofounder_started",
+                "cofounder_agreed",
+                "cofounder_profile_complete",
+            }:
+                return _result(
+                    target,
+                    username,
+                    password,
+                    prior_status,
+                    f"{target.email} already signed up",
+                    finished_at,
+                )
+        return _result(
+            target, username, password, "already_registered", str(exc), finished_at
+        )
 
+    try:
         fill_by_label(page, "First Name", target.first_name)
         fill_by_label(page, "Last Name", target.last_name)
         fill_by_label(page, "Email", target.email)
@@ -119,13 +168,12 @@ def signup_one(page: Page, target: AccountTarget) -> SignupResult:
 
         fill_by_label(page, "Your LinkedIn Profile URL", target.linkedin_url)
 
-        page.get_by_role("button", name="Sign Up").click()
+        signup_btn = page.get_by_role("button", name=re.compile(r"Sign\s*[Uu]p", re.I))
+        signup_btn.click()
 
         # Success heuristics: leave signup form, or show a clear confirmation.
         try:
-            page.get_by_role("button", name="Sign Up").wait_for(
-                state="hidden", timeout=20000
-            )
+            signup_btn.wait_for(state="hidden", timeout=20000)
         except PlaywrightTimeoutError:
             # Still on form — capture any visible validation/error text.
             body = page.locator("body").inner_text(timeout=3000)
@@ -152,7 +200,7 @@ def signup_one(page: Page, target: AccountTarget) -> SignupResult:
                 username,
                 password,
                 "uncertain",
-                "Sign Up still visible; check browser for CAPTCHA/verification",
+                "Sign up still visible; check browser for CAPTCHA/verification",
                 finished_at,
             )
 
